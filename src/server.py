@@ -1,3 +1,4 @@
+#!/bin/env python3
 import os
 import logging
 import requests
@@ -15,11 +16,11 @@ app = Flask(__name__)
 # Public Variables
 CACHE_DIR = os.getenv('CACHE_DIR', 'cache')
 PORT = int(os.getenv('PORT', '8654'))
-CACHE_EXPIRY_DAYS = int(os.getenv('CACHE_EXPIRY_DAYS', '1'))
+INDEX_CACHE_EXPIRY_DAYS = int(os.getenv('INDEX_CACHE_EXPIRY_DAYS', '1'))
 
 ALPINE_REMOTES = os.getenv('ALPINE_REMOTES', '')
 alpine_remotes = {
-    "alpine": "https://dl-cdn.alpinelinux.org",
+    "default": "https://dl-cdn.alpinelinux.org",
 }
 if ALPINE_REMOTES:
     alpine_remotes.update({k: v for k, v in (item.split("::") for item in ALPINE_REMOTES.split(","))})
@@ -46,9 +47,9 @@ def download_file(path):
 
 
 def fetch_cache(path):
-    remote = path.split('/')[0]
+    repo = path.split('/')[0]
     remote_path = '/'.join(path.split('/')[1:])
-    file_path = f'{CACHE_DIR}/{remote}/{remote_path}'
+    file_path = f'{CACHE_DIR}/{repo}/{remote_path}'
     metadata_path = f'{file_path}.meta'
 
     # Ensure only one thread can download the file at a time
@@ -57,22 +58,26 @@ def fetch_cache(path):
 
     with file_locks[file_path]:
         try:
+            # Download Index file
             if 'APKINDEX.tar.gz' in path:
                 if not os.path.exists(file_path) or not os.path.exists(metadata_path):
                     download_file(path)
                 else:
                     with open(metadata_path, 'r') as meta_file:
                         cached_time = datetime.fromisoformat(meta_file.read().strip())
-                        if datetime.now() - cached_time > timedelta(days=CACHE_EXPIRY_DAYS):
+                        if datetime.now() - cached_time > timedelta(days=INDEX_CACHE_EXPIRY_DAYS):
                             download_file(path)
                 with open(metadata_path, 'w') as meta_file:
                     meta_file.write(datetime.now().isoformat())
 
+            # Download package
             elif not os.path.exists(file_path):
                 download_file(path)
 
-            with open(file_path, 'rb') as file:
-                return file.read()
+            # Return the file
+            with open(file_path, 'rb') as f:
+                return f.read()
+
         except FileNotFoundError:
             pass
 

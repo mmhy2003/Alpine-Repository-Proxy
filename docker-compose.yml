@@ -12,7 +12,8 @@ services:
     #environment:
       # Alpine Linux mirrors
       # Syntax: <proxy_path_1>::<remote_repo_1>,<proxy_path_2>::<remote_repo_2>
-      # Example: ALPINE_REMOTES=alpine1::https://dl-cdn.alpinelinux.org,alpine2::mirror.yandex.ru
+      # Example: ALPINE_REMOTES=alpine1::https://dl-cdn.alpinelinux.org,alpine2::http://mirror.yandex.ru/mirrors
+      # Reference: https://mirrors.alpinelinux.org/
       #- ALPINE_REMOTES=
     volumes:
       - cache-data:/app/cache

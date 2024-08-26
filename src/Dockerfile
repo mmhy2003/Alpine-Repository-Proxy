@@ -1,5 +1,7 @@
 FROM ubuntu:22.04
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 # Set the working directory
 WORKDIR /app
 
@@ -7,7 +9,7 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1
 ENV CACHE_DIR=cache
 ENV PORT=8654
-ENV CACHE_EXPIRY_DAYS=1
+ENV INDEX_CACHE_EXPIRY_DAYS=1
 
 # Volume for the cache
 VOLUME /app/cache
